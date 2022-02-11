@@ -1,0 +1,35 @@
+# Welcome to Serverless!
+#
+# This file is the main config file for your service.
+# It's very minimal at this point and uses default values.
+# You can always add more config options for more control.
+# We've included some commented out config examples here.
+# Just uncomment any of them to get that config option.
+#
+# For full config options, check the docs:
+#    docs.serverless.com
+#
+# Happy Coding!
+
+service: tweetWeather
+
+plugins:
+    - serverless-python-requirements
+
+custom:
+    pythonRequirements:
+        dockerizePip: non-linux
+
+provider:
+    name: aws
+    runtime: python3.9
+
+    stage: dev
+    region: us-east-1
+
+functions:
+    wikiquotes:
+        handler: tweet_weather.tweet_weather
+        events:
+        # GMT Time
+            - schedule: rate(2 hours)
