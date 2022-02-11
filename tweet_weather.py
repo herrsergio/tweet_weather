@@ -103,10 +103,17 @@ def display_weather_info(weather_data, imperial=False):
 
     weather_symbol = _select_weather_display_params(weather_id)
 
-    print(f"{city:^{PADDING}}", end="")
-    print(f"\t{weather_symbol}", end=" ")
-    print(f"\t{weather_description.capitalize():^{PADDING}}", end=" ")
-    print(f"({temperature}°{'F' if imperial else 'C'})")
+    #print(f"{city:^{PADDING}}", end="")
+    #print(f"\t{weather_symbol}", end=" ")
+    #print(f"\t{weather_description.capitalize():^{PADDING}}", end=" ")
+    #print(f"({temperature}°{'F' if imperial else 'C'})")
+
+    output = f"{city:^{PADDING}}"
+    output = output+f"\t{weather_symbol}"
+    output = output+f"\t{weather_description.capitalize():^{PADDING}}"
+    output = output+f"({temperature}°{'F' if imperial else 'C'})\n"
+
+    return output
 
 
 def _select_weather_display_params(weather_id):
@@ -158,7 +165,8 @@ def tweet_weather(event, context):
     weather_data = get_weather_data(query_url)
     weather_sntpburg = display_weather_info(weather_data)
 
-    message = weather_cdmx+"\n"+weather_snfcso+"\n"+weather_sntpburg
+    message = str(weather_cdmx).strip()+"\n\n"+str(weather_snfcso).strip()+"\n\n"+str(weather_sntpburg).strip()
+    print(message)
 
     api.update_status(status=message)
 
