@@ -1,2 +1,1 @@
-# tweet_weather
-Tweet the weather conditions
+# Tweet Weather
