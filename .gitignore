@@ -129,3 +129,7 @@ dmypy.json
 .pyre/
 
 secrets.ini
+.serverless/
+node_modules/
+package-lock.json
+package.json

@@ -1,0 +1,5 @@
+boto3==1.26.142
+botocore==1.29.142
+Flask==2.3.2
+setuptools==49.2.1
+tweepy==4.13.0
