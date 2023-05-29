@@ -16,9 +16,9 @@ service: tweetWeather
 plugins:
     - serverless-python-requirements
 
-custom:
-    pythonRequirements:
-        dockerizePip: non-linux
+      #custom:
+      #pythonRequirements:
+      # dockerizePip: non-linux
 
 provider:
     name: aws
@@ -28,7 +28,7 @@ provider:
     region: us-east-1
 
 functions:
-    wikiquotes:
+    weather:
         handler: tweet_weather.tweet_weather
         events:
         # GMT Time

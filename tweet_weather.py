@@ -144,11 +144,10 @@ def tweet_weather(event, context):
     access_token = _get_TW_apis_key("access_token")
     access_token_secret = _get_TW_apis_key("access_token_secret")
 
-    auth = tweepy.OAuthHandler(consumer_key, consumer_secret)
-    auth.secure = True
-    auth.set_access_token(access_token, access_token_secret)
-
-    api = tweepy.API(auth)
+    client = tweepy.Client(
+        consumer_key=consumer_key, consumer_secret=consumer_secret,
+        access_token=access_token, access_token_secret=access_token_secret
+    )
 
     city = "Mexico City"
     query_url = build_weather_query(city)
@@ -168,6 +167,6 @@ def tweet_weather(event, context):
     message = str(weather_cdmx).strip()+"\n\n"+str(weather_snfcso).strip()+"\n\n"+str(weather_sntpburg).strip()
     print(message)
 
-    api.update_status(status=message)
+    response = client.create_tweet(text=message)
 
     return 1
