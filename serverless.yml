@@ -13,16 +13,9 @@
 
 service: tweetWeather
 
-plugins:
-    - serverless-python-requirements
-
-      #custom:
-      #pythonRequirements:
-      # dockerizePip: non-linux
-
 provider:
     name: aws
-    runtime: python3.9
+    runtime: python3.12
 
     stage: dev
     region: us-east-1
@@ -33,3 +26,16 @@ functions:
         events:
         # GMT Time
             - schedule: rate(2 hours)
+
+custom:
+    pythonRequirements:
+        dockerizePip: true
+
+package:
+    exclude:
+        - venv/**
+        - .venv/**
+        - env/**
+        - node_modules/**
+        - __pycache__/**
+
