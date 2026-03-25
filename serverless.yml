@@ -19,6 +19,7 @@ provider:
 
     stage: dev
     region: us-east-1
+    logRetentionInDays: 7
 
 functions:
     weather:
@@ -26,6 +27,7 @@ functions:
         events:
         # GMT Time
             - schedule: rate(2 hours)
+        maximumRetryAttempts: 0
 
 custom:
     pythonRequirements:
@@ -38,4 +40,3 @@ package:
         - env/**
         - node_modules/**
         - __pycache__/**
-
