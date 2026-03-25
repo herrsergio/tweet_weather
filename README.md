@@ -52,7 +52,7 @@ source .venv/bin/activate
 serverless plugin install -n serverless-python-requirements
 
 # Deploy to AWS Lambda!
-sls deploy
+serverless deploy
 ```
 
-Once the `sls deploy` command succeeds, AWS EventBridge will automatically invoke the `tweet_weather` function every 2 hours as configured in the `serverless.yml`.
+Once the `serverless deploy` command succeeds, AWS EventBridge will automatically invoke the `tweet_weather` function every 2 hours as configured in the `serverless.yml`.
