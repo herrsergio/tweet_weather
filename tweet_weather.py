@@ -3,6 +3,7 @@ from configparser import ConfigParser
 from urllib import error, parse, request
 import json
 import sys
+import datetime
 
 BASE_WEATHER_API_URL = "http://api.openweathermap.org/data/2.5/weather"
 PADDING = 20
@@ -56,9 +57,36 @@ def build_weather_query(city_input, imperial=False):
     units = "imperial" if imperial else "metric"
     url = (
         f"{BASE_WEATHER_API_URL}?q={url_encoded_city_name}"
-        f"&units={units}&appid={api_key}&lang=es"
+        f"&units={units}&appid={api_key}&lang=en"
     )
     return url
+
+
+def get_openmeteo_historical_temp(lat, lon, dt_date):
+    """Fetches historical temperature from exactly 1 year ago using Open-Meteo Archive API."""
+    date_str = dt_date.strftime("%Y-%m-%d")
+    hour = dt_date.hour
+    
+    url = (
+        f"https://archive-api.open-meteo.com/v1/archive"
+        f"?latitude={lat}&longitude={lon}"
+        f"&start_date={date_str}&end_date={date_str}"
+        f"&hourly=temperature_2m"
+    )
+    
+    req = request.Request(url, headers={'User-Agent': 'Mozilla/5.0'})
+    response = request.urlopen(req)
+    data = json.loads(response.read())
+    
+    target_time_str = f"{date_str}T{hour:02d}:00"
+    times = data["hourly"]["time"]
+    temps = data["hourly"]["temperature_2m"]
+    
+    if target_time_str in times:
+        idx = times.index(target_time_str)
+        return temps[idx]
+    else:
+        return temps[12]
 
 
 def get_weather_data(query_url):
@@ -87,11 +115,12 @@ def get_weather_data(query_url):
         sys.exit("Error: Couldn't decode JSON data")
 
 
-def display_weather_info(weather_data, imperial=False):
+def display_weather_info(weather_data, historical_temp=None, imperial=False):
     """Prints formatted weather information about a city.
 
     Args:
         weather_data (dict): API response from OpenWeather by city name
+        historical_temp (float): Temperature from 1 year ago
         imperial (bool): Whether or not to use imperial units for temperature
 
     More information at https://openweathermap.org/current#name
@@ -103,15 +132,14 @@ def display_weather_info(weather_data, imperial=False):
 
     weather_symbol = _select_weather_display_params(weather_id)
 
-    #print(f"{city:^{PADDING}}", end="")
-    #print(f"\t{weather_symbol}", end=" ")
-    #print(f"\t{weather_description.capitalize():^{PADDING}}", end=" ")
-    #print(f"({temperature}°{'F' if imperial else 'C'})")
-
     output = f"{city:^{PADDING}}"
     output = output+f"\t{weather_symbol}"
     output = output+f"\t{weather_description.capitalize():^{PADDING}}"
-    output = output+f"({temperature}°{'F' if imperial else 'C'})\n"
+    
+    if historical_temp is not None:
+        output = output+f"({temperature}°{'F' if imperial else 'C'}) ({historical_temp}°{'F' if imperial else 'C'} last year)\n"
+    else:
+        output = output+f"({temperature}°{'F' if imperial else 'C'})\n"
 
     return output
 
@@ -149,20 +177,23 @@ def tweet_weather(event, context):
         access_token=access_token, access_token_secret=access_token_secret
     )
 
-    city = "Mexico City"
-    query_url = build_weather_query(city)
-    weather_data = get_weather_data(query_url)
-    weather_cdmx = display_weather_info(weather_data)
+    dt_1y_ago_date = datetime.datetime.now() - datetime.timedelta(days=365)
 
-    city = "San Francisco"
-    query_url = build_weather_query(city)
-    weather_data = get_weather_data(query_url)
-    weather_snfcso = display_weather_info(weather_data)
+    def get_weather_str(city_name):
+        query_url = build_weather_query(city_name)
+        weather_data = get_weather_data(query_url)
+        lat = weather_data["coord"]["lat"]
+        lon = weather_data["coord"]["lon"]
+        try:
+            hist_temp = get_openmeteo_historical_temp(lat, lon, dt_1y_ago_date)
+        except Exception as e:
+            print(f"Failed to fetch historical data for {city_name}: {e}")
+            hist_temp = None
+        return display_weather_info(weather_data, hist_temp)
 
-    city = "Saint Petersburg"
-    query_url = build_weather_query(city)
-    weather_data = get_weather_data(query_url)
-    weather_sntpburg = display_weather_info(weather_data)
+    weather_cdmx = get_weather_str("Mexico City")
+    weather_snfcso = get_weather_str("San Francisco")
+    weather_sntpburg = get_weather_str("Saint Petersburg")
 
     message = str(weather_cdmx).strip()+"\n\n"+str(weather_snfcso).strip()+"\n\n"+str(weather_sntpburg).strip()
     print(message)
