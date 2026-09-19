@@ -1,4 +1,5 @@
-import tweepy
+from atproto import Client
+import grapheme
 from configparser import ConfigParser
 from urllib import error, parse, request
 import json
@@ -7,6 +8,7 @@ import datetime
 
 BASE_WEATHER_API_URL = "http://api.openweathermap.org/data/2.5/weather"
 PADDING = 20
+MAX_GRAPHEMES = 300  # Bluesky post limit
 THUNDERSTORM = range(200, 300)
 DRIZZLE = range(300, 400)
 RAIN = range(500, 600)
@@ -29,17 +31,18 @@ def _get_OW_api_key():
     return config["openweather"]["api_key"]
 
 
-def _get_TW_apis_key(description):
-    """Fetch the API key from your configuration file.
+def _get_BS_config(key):
+    """Fetch a Bluesky value from your configuration file.
 
     Expects a configuration file named "secrets.ini" with structure:
 
-        [openweather]
-        api_key=<YOUR-OPENWEATHER-API-KEY>
+        [bluesky]
+        handle=<YOUR-BLUESKY-HANDLE>
+        app_password=<YOUR-BLUESKY-APP-PASSWORD>
     """
     config = ConfigParser()
     config.read("secrets.ini")
-    return config["twitter"][description]
+    return config["bluesky"][key]
 
 
 def build_weather_query(city_input, imperial=False):
@@ -166,16 +169,11 @@ def _select_weather_display_params(weather_id):
 
 def tweet_weather(event, context):
 
-    consumer_key = _get_TW_apis_key("consumer_key")
-    consumer_secret = _get_TW_apis_key("consumer_secret")
+    handle = _get_BS_config("handle")
+    app_password = _get_BS_config("app_password")
 
-    access_token = _get_TW_apis_key("access_token")
-    access_token_secret = _get_TW_apis_key("access_token_secret")
-
-    client = tweepy.Client(
-        consumer_key=consumer_key, consumer_secret=consumer_secret,
-        access_token=access_token, access_token_secret=access_token_secret
-    )
+    client = Client()
+    client.login(handle, app_password)
 
     dt_1y_ago_date = datetime.datetime.now() - datetime.timedelta(days=365)
 
@@ -196,8 +194,13 @@ def tweet_weather(event, context):
     weather_sntpburg = get_weather_str("Saint Petersburg")
 
     message = str(weather_cdmx).strip()+"\n\n"+str(weather_snfcso).strip()+"\n\n"+str(weather_sntpburg).strip()
+
+    # Bluesky counts length in graphemes, not code points; truncate if needed.
+    if grapheme.length(message) > MAX_GRAPHEMES:
+        message = grapheme.slice(message, 0, MAX_GRAPHEMES - 1) + "…"
+
     print(message)
 
-    response = client.create_tweet(text=message)
+    client.send_post(text=message)
 
     return 1
