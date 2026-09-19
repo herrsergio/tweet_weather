@@ -1,8 +1,8 @@
 # Tweet Weather
 
-An active Twitter bot implemented as a Serverless AWS Lambda function that posts automated weather updates natively using the Tweepy library. 
+An active Bluesky bot implemented as a Serverless AWS Lambda function that posts automated weather updates natively using the `atproto` library.
 
-Every two hours, the bot evaluates conditions for predefined cities (Mexico City, San Francisco, and Saint Petersburg)—extracting the current conditions, current temperature, and exactly the temperature at the same hour from 1 year ago—and tweets a formatted summary.
+Every two hours, the bot evaluates conditions for predefined cities (Mexico City, San Francisco, and Saint Petersburg)—extracting the current conditions, current temperature, and exactly the temperature at the same hour from 1 year ago—and posts a formatted summary to Bluesky. Posts are truncated to Bluesky's 300-grapheme limit when necessary.
 
 Behind the scenes:
 - **Current Data:** It relies on the OpenWeather `2.5/weather` API to fetch real-time geographic data and the current reading.
@@ -10,17 +10,15 @@ Behind the scenes:
 
 ## Setup & Configuration
 
-Before deploying, you must provide your API keys to authorize Twitter posts and OpenWeather fetches.
+Before deploying, you must provide your credentials to authorize Bluesky posts and OpenWeather fetches.
 
 1. Create a `secrets.ini` file in the root directory (you can copy `secrets.ini.skel` as a starting point).
-2. Fill in your respective keys:
+2. Fill in your respective values. The Bluesky `app_password` is created in Bluesky **Settings → App Passwords** (do not use your account password):
 
 ```ini
-[twitter]
-consumer_key=YOUR_CONSUMER_KEY
-consumer_secret=YOUR_CONSUMER_SECRET
-access_token=YOUR_ACCESS_TOKEN
-access_token_secret=YOUR_ACCESS_TOKEN_SECRET
+[bluesky]
+handle=YOUR_HANDLE.bsky.social
+app_password=YOUR_APP_PASSWORD
 
 [openweather]
 api_key=YOUR_OPENWEATHER_API_KEY
